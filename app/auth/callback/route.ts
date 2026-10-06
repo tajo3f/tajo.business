@@ -5,11 +5,18 @@ import { safeNextPath } from "@/lib/utils";
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const next = safeNextPath(url.searchParams.get("next"), "/app");
+  const next = safeNextPath(url.searchParams.get("next"), "/onboarding");
 
-  if (code) {
-    const supabase = await createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+  if (!code) {
+    return NextResponse.redirect(new URL("/login?error=missing_auth_code", url.origin));
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+  if (error) {
+    console.error("[auth/callback] exchange failed", error);
+    return NextResponse.redirect(new URL("/login?error=auth_callback_failed", url.origin));
   }
 
   return NextResponse.redirect(new URL(next, url.origin));

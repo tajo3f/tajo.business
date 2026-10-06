@@ -1,191 +1,135 @@
-# TAJO ONE — MVP
+# TAJO ONE — Premium MVP V2
 
-Frontend MVP do TAJO ONE para **Next.js + Vercel + Supabase**.
+Versão revisada para **GitHub + Vercel + Supabase**, com site institucional premium e fluxo de autenticação reforçado.
 
-## Entregue nesta versão
+## O que mudou nesta V2
 
-- Landing page;
-- tema claro/escuro;
-- login;
-- cadastro;
-- confirmação de e-mail;
-- recuperação de senha;
-- onboarding de empresa;
-- seleção de nicho;
-- seleção de plano;
-- criação de `organization` via RPC;
-- pagamento manual;
-- link pronto para envio do comprovante via WhatsApp;
-- estado `pending_payment / under_review / active`;
-- bloqueio server-side de `/app` sem assinatura ativa;
-- dashboard;
-- Brand Brain;
-- Material Studio com exportação PNG;
-- gerador de QR para WhatsApp, URL, Pix e Wi-Fi;
-- gerador de acesso direto para Google Review por Place ID;
-- tela de resultados preparada para analytics;
-- conta/assinatura;
-- headers básicos de segurança;
-- `proxy.ts` para sessão Supabase SSR.
+- Next.js fixado em **16.3.8**.
+- Removido o ESLint antigo do deploy para eliminar o aviso `eslint@9.39.5 deprecated`.
+- `npm run typecheck` substitui o lint como verificação local nesta V2.
+- Cadastro trata Supabase com confirmação de e-mail ligada ou desligada.
+- Callback de autenticação redireciona falhas para login em vez de quebrar a aplicação.
+- Workspace registra erros úteis nos Runtime Logs.
+- `global-error.tsx` oferece uma tela de recuperação em vez do erro genérico do framework.
+- Landing institucional completamente redesenhada.
+- CSS avançado: glass, aurora, grid, noise, glow, marquee, reveal, hover e animações com `prefers-reduced-motion`.
+- JS/React: efeitos de entrada por IntersectionObserver, pointer glow e menu mobile.
 
-## Banco esperado
+## IMPORTANTE: substituindo a V1
 
-Este frontend foi criado para a migration inicial já definida para o TAJO ONE, contendo:
+Se seu repositório antigo já tiver `package-lock.json`, faça isto no PC antes do novo deploy:
 
-- `profiles`
-- `niches`
-- `plans`
-- `organizations`
-- `organization_members`
-- `subscriptions`
-- `payment_submissions`
-- `brand_profiles`
-- RPC `create_organization`
-- RPC `mark_payment_sent`
+```bash
+rm package-lock.json
+rm -rf node_modules .next
+npm install
+npm run typecheck
+npm run build
+```
 
-## 1. Instalação
+No Windows PowerShell você pode apagar `package-lock.json`, `node_modules` e `.next` manualmente pelo Explorer, depois executar:
 
 ```bash
 npm install
+npm run typecheck
+npm run build
 ```
 
-## 2. Variáveis de ambiente
+Depois faça commit do **novo** `package-lock.json`.
 
-Copie:
+## Environment Variables
 
-```bash
-cp .env.example .env.local
-```
-
-Preencha:
+Crie na Vercel:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
-NEXT_PUBLIC_TAJO_WHATSAPP=
-NEXT_PUBLIC_TAJO_PIX_KEY=
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_SUPABASE_URL=https://SEU-PROJETO.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxx
+NEXT_PUBLIC_TAJO_WHATSAPP=5527999999999
+NEXT_PUBLIC_TAJO_PIX_KEY=sua-chave-pix
+NEXT_PUBLIC_APP_URL=https://SEU-DOMINIO.vercel.app
 ```
 
-A `publishable key` pode estar no browser. **Nunca coloque secret/service-role key em variável `NEXT_PUBLIC_*`.**
+Nunca coloque service role, database password ou secret key em `NEXT_PUBLIC_*`.
 
-## 3. Supabase Auth
+## Supabase Auth
 
-No painel do Supabase, configure as URLs de redirect do projeto.
+Em **Authentication → URL Configuration**:
 
-Local:
+Site URL:
+
+```text
+https://SEU-DOMINIO.vercel.app
+```
+
+Redirect URL:
+
+```text
+https://SEU-DOMINIO.vercel.app/auth/callback
+```
+
+Para desenvolvimento local também adicione:
 
 ```text
 http://localhost:3000/auth/callback
 ```
 
-Produção:
+## Banco esperado
 
-```text
-https://SEU-DOMINIO.com/auth/callback
-```
+A migration inicial precisa conter:
 
-Ative confirmação de e-mail antes de produção.
+- profiles
+- niches
+- plans
+- organizations
+- organization_members
+- subscriptions
+- payment_submissions
+- brand_profiles
+- RPC `create_organization`
+- RPC `mark_payment_sent`
 
-## 4. Executar
-
-```bash
-npm run dev
-```
-
-Acesse:
-
-```text
-http://localhost:3000
-```
-
-## 5. Fluxo esperado
+## Fluxo
 
 ```text
 /signup
-  ↓
-confirma e-mail
-  ↓
-/onboarding
-  ↓
-create_organization()
-  ↓
-/billing
-  ↓
-envia comprovante no WhatsApp
-  ↓
-mark_payment_sent()
-  ↓
-TAJO aprova no banco/admin
-  ↓
-/app
+→ confirmação do e-mail (quando habilitada)
+→ /auth/callback
+→ /onboarding
+→ create_organization()
+→ /billing
+→ comprovante via WhatsApp
+→ mark_payment_sent()
+→ aprovação TAJO
+→ /app
 ```
 
-## 6. Aprovação manual
-
-Enquanto não existir o painel administrativo completo, a assinatura é aprovada pelo mecanismo privado já criado no banco:
+## Aprovação manual temporária
 
 ```sql
 select private.approve_payment(
   'TAJO-REFERENCIA',
-  'UUID-DO-ADMIN',
+  'UUID-ADMIN',
   1
 );
 ```
 
-## 7. Segurança
+## Diagnóstico
 
-O frontend não considera o estado visual como autorização.
+Se der erro no cadastro, abra Vercel → Logs → Runtime Logs e procure prefixos:
 
-A rota `/app` consulta a assinatura no servidor. Mesmo que alguém modifique JavaScript, HTML ou localStorage, a aplicação volta para `/billing` sem assinatura ativa.
+- `[auth/callback]`
+- `[workspace]`
+- `[onboarding]`
+- `[billing]`
+- `[TAJO ONE] global error`
 
-A segurança dos dados depende também de:
+## Próximos módulos
 
-- RLS;
-- grants mínimos;
-- schemas privados;
-- políticas do Storage;
-- rate limiting/WAF no deploy;
-- secrets somente no servidor;
-- MFA para administradores.
-
-### Importante sobre Google Review
-
-A rota `/api/reviews/normalize`:
-
-1. aceita Place ID diretamente;
-2. reconhece links que contenham `placeid`, `place_id` ou `query_place_id`;
-3. tenta seguir links oficiais do Google;
-4. bloqueia hosts arbitrários para reduzir risco de SSRF.
-
-Alguns links encurtados do Google não expõem o Place ID na URL final. Nesses casos será necessária uma integração oficial adicional de Places no backend.
-
-## 8. Deploy na Vercel
-
-1. Suba o projeto no GitHub;
-2. importe o repositório na Vercel;
-3. adicione as variáveis de ambiente;
-4. configure o domínio;
-5. adicione a URL de produção nos redirects do Supabase;
-6. habilite as proteções disponíveis no Firewall/WAF do projeto.
-
-## Próximas migrations recomendadas
-
-```text
-002_products_services
-003_brand_assets_storage
-004_material_history
-005_qr_links_tracking
-006_google_reviews
-007_campaigns
-008_customers
-009_coupons_loyalty
-010_analytics
-011_ai_usage_limits
-012_admin_backend
-013_security_hardening
-```
-
-## Observação
-
-O histórico de QR, materiais e cliques ainda não persiste porque a migration inicial atual não contém essas tabelas. As ferramentas funcionam no MVP, mas analytics real entra nas migrations seguintes.
+- histórico dos materiais;
+- QR e links persistentes;
+- analytics;
+- campanhas;
+- clientes;
+- cupons/fidelidade;
+- IA;
+- painel administrativo.

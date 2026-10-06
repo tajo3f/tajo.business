@@ -1,12 +1,12 @@
 {
-  "name": "tajo-one-mvp",
-  "version": "0.1.0",
+  "name": "tajo-one-premium-mvp",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",
@@ -14,7 +14,7 @@
     "clsx": "^2.1.1",
     "html-to-image": "^1.11.13",
     "lucide-react": "^0.468.0",
-    "next": "16.2.6",
+    "next": "16.3.8",
     "qrcode": "^1.5.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -24,16 +24,11 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.13",
-    "@types/node": "^20",
+    "@types/node": "^22",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.6",
     "tailwindcss": "^4.1.13",
-    "typescript": "^5"
-  },
-  "overrides": {
-    "postcss": "^8.5.10"
+    "typescript": "^5.9.2"
   }
 }
